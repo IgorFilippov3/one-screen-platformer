@@ -22,3 +22,8 @@ Hero.prototype.jump = function() {
   }
   return canJump;
 };
+
+Hero.prototype.bounce = function() {
+  const BOUNCE_SPEED = 200;
+  this.body.velocity.y = -BOUNCE_SPEED; // чем выше герой, тем меньше velocity.y
+};
