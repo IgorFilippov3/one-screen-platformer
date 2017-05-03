@@ -48,6 +48,7 @@ PlayState.preload = function() {
   load.spritesheet('hero', 'images/hero.png', 36, 42);
   load.spritesheet('door', 'images/door.png', 42, 66);
   load.spritesheet('icon:key', 'images/key_icon.png', 34, 30);
+  load.spritesheet('grue', 'images/grue.png', 56, 71);
 
   load.audio('sfx:jump', 'audio/jump.wav'); // jump sound
   load.audio('sfx:coin', 'audio/coin.wav'); // pick coin sound
@@ -97,6 +98,8 @@ PlayState._handleCollisions = function() {
   arcade.collide(this.hero, this.platforms);
   arcade.collide(this.spiders, this.platforms);
   arcade.collide(this.spiders, this.enemyWalls);
+  arcade.collide(this.grue, this.platforms);
+  arcade.collide(this.grue, this.enemyWalls);
   // null is arg for filter sprites
   // this._onHeroVsCoin is callback that will be executed every time the main character touches a coin
   arcade.overlap(this.hero, this.coins, this._onHeroVsCoin, null, this);
@@ -160,7 +163,7 @@ PlayState._loadLevel = function(data) {
     data.platforms.forEach(this._spawnPlatform, this);
     data.coins.forEach(this._spawnCoin, this);
 
-    this._spawnCharacters({ hero: data.hero, spiders: data.spiders });
+    this._spawnCharacters({ hero: data.hero, spiders: data.spiders, grue: data.grue });
     this._spawnDoor(data.door.x, data.door.y);
     this._spawnKey(data.key.x, data.key.y);
 };
@@ -185,7 +188,6 @@ PlayState._spawnPlatform = function(platform) {
     // this.game.add.sprite(platform.x, platform.y, platform.image);
     this._spawnEnemyWall(platform.x, platform.y, 'left');
     this._spawnEnemyWall(platform.x + sprite.width, platform.y, 'right');
-
 };
 
 PlayState._spawnCharacters = function(data) {
@@ -196,6 +198,12 @@ PlayState._spawnCharacters = function(data) {
       let sprite = new Spider(this.game, spider.x, spider.y);
       this.spiders.add(sprite);
     }, this);
+
+    if(data.grue.x && data.grue.y) {
+      this.grue = new Grue(this.game, data.grue.x, data.grue.y);
+      this.game.add.existing(this.grue);
+    }
+
 };
 
 PlayState._spawnEnemyWall = function(x , y, side) {
@@ -232,6 +240,10 @@ PlayState._spawnDoor = function(x, y) {
   this.door.anchor.set(0.5, 1);
   this.game.physics.enable(this.door);
   this.door.body.allowGravity = false;
+
+  if(this.level === 0) {
+    this._spawnEnemyWall(this.door.x + this.door.width / 2 , this.door.y, 'right');
+  }
 };
 
 PlayState._spawnKey = function(x, y) {
