@@ -206,7 +206,7 @@ PlayState._onHeroVsKey = function(hero, key) {
 PlayState._onHeroVsDoor = function(hero, door) {
   this.sfx.door.play();
   if(this.level === 1) {
-    alert('Congratulations, you won!');
+    alert(`Congratulations, you won with score - ${this.coinPickupCount}`);
     this.game.state.restart(true, false, { level: 0 });
   } else {
     this.game.state.restart(true, false, { level: this.level + 1 });
