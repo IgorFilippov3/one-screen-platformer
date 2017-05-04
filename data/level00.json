@@ -4,9 +4,9 @@
         {"image": "grass:1x1", "x": 620, "y": 220},
         {"image": "grass:4x1", "x": 420, "y": 420},
         {"image": "grass:6x1", "x": 220, "y": 120},
-        {"image": "grass:4x1", "x": 220, "y": 236},
+        {"image": "grass:4x1", "x": 264, "y": 236},
         {"image": "grass:1x1", "x": 120, "y": 320},
-        {"image": "grass:1x1", "x": 231, "y": 506}
+        {"image": "grass:1x1", "x": 231, "y": 505}
 
     ],
     "decoration": [
