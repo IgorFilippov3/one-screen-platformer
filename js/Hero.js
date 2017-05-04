@@ -40,6 +40,11 @@ Hero.prototype.bounce = function() {
   this.body.velocity.y = -BOUNCE_SPEED; // чем выше герой, тем меньше velocity.y
 };
 
+Hero.prototype.rebound = function() {
+  const REBOUND_SPEED = 800;
+  this.body.velocity.y = -REBOUND_SPEED;
+};
+
 Hero.prototype.update = function() {
   let animationName = this._getAnimationName();
   if(this.animations.name !== animationName) {

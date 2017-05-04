@@ -8,6 +8,7 @@ function Grue(game, x, y) {
   this.animations.add('right', [0], 8, true);
   this.animations.add('left', [2], 8, true);
   this.animations.play('right');
+  this.healthPoint = 1;
 }
 
 Grue.SPEED = 200;
@@ -25,6 +26,16 @@ Grue.prototype.update = function() {
     this.animations.play('right');
   }
 }
+
+Grue.prototype.die = function() {
+  if(this.healthPoint === 0) {
+      this.kill();
+      this.body.enable = false;
+  } else {
+    this.healthPoint -= 1;
+    console.log(this.healthPoint);
+  }
+};
 
 function Hero(game, x, y) {
   Phaser.Sprite.call(this, game , x, y, 'hero');
@@ -68,6 +79,11 @@ Hero.prototype.bounce = function() {
   this.body.velocity.y = -BOUNCE_SPEED; // чем выше герой, тем меньше velocity.y
 };
 
+Hero.prototype.rebound = function() {
+  const REBOUND_SPEED = 800;
+  this.body.velocity.y = -REBOUND_SPEED;
+};
+
 Hero.prototype.update = function() {
   let animationName = this._getAnimationName();
   if(this.animations.name !== animationName) {
@@ -94,12 +110,13 @@ window.onload = function() {
   let game = new Phaser.Game(960, 600, Phaser.AUTO, 'game');
   game.state.add('play', PlayState);
   game.state.start('play', true, false, { level: 0 });
+  
 };
 
 PlayState = {};
 
 const LEVEL_COUNT = 2;
-
+let totalCount = 0;
 PlayState.init = function(data) {
   this.level = (data.level || 0) % LEVEL_COUNT;
 
@@ -201,11 +218,13 @@ PlayState._handleCollisions = function() {
   // null is arg for filter sprites
   // this._onHeroVsCoin is callback that will be executed every time the main character touches a coin
   arcade.overlap(this.hero, this.coins, this._onHeroVsCoin, null, this);
-  arcade.overlap(this.hero, this.spiders, this._onHeroVsEnemy, null, this);
+  arcade.overlap(this.hero, this.spiders, this._onHeroVsSpiders, null, this);
   arcade.overlap(this.hero, this.key, this._onHeroVsKey, null, this);
   arcade.overlap(this.hero, this.door, this._onHeroVsDoor, function(hero, door){
     return this.hasKey && hero.body.touching.down // Если герой не имеет ключа или не касается земли, то колбек _onHeroVsDoor не сработает
   }, this);
+
+  arcade.overlap(this.hero, this.grue, this._onHeroVsGrue, null, this);
 
 };
 
@@ -217,7 +236,22 @@ PlayState._onHeroVsCoin = function(hero, coin) {
 
 };
 
-PlayState._onHeroVsEnemy = function(hero, enemy) {
+PlayState._onHeroVsGrue = function(hero, grue) {
+  if(hero.body.velocity.y > 0) {
+    hero.rebound(); // герой слегка подпрыгивает
+    grue.die();
+    this.sfx.stomp.play();
+    if(!grue.body.enable) {
+      this.coinPickupCount += 3;
+      this.sfx.coin.play();
+    }
+  } else {
+    this.sfx.stomp.play();
+    this.game.state.restart(true, false, { level: this.level });
+  }
+};
+
+PlayState._onHeroVsSpiders = function(hero, enemy) {
   if(hero.body.velocity.y > 0) {
     hero.bounce(); // герой слегка подпрыгивает
     enemy.die();
@@ -235,12 +269,20 @@ PlayState._onHeroVsKey = function(hero, key) {
 };
 
 PlayState._onHeroVsDoor = function(hero, door) {
-  this.sfx.door.play();
+
   if(this.level === 1) {
-    alert(`Congratulations, you won with score - ${this.coinPickupCount}`);
+    this.sfx.door.play();
+    totalCount += this.coinPickupCount;
+    alert(`Congratulations, you won with score - ${totalCount}`);
+    totalCount = 0;
     this.game.state.restart(true, false, { level: 0 });
   } else {
-    this.game.state.restart(true, false, { level: this.level + 1 });
+    if(this.coinPickupCount >= 8) {
+        totalCount += this.coinPickupCount;
+        this.sfx.door.play();
+        this.game.state.restart(true, false, { level: this.level + 1 });
+    }
+
   }
 
 
@@ -264,6 +306,8 @@ PlayState._loadLevel = function(data) {
     this._spawnCharacters({ hero: data.hero, spiders: data.spiders, grue: data.grue });
     this._spawnDoor(data.door.x, data.door.y);
     this._spawnKey(data.key.x, data.key.y);
+
+    if(this.level === 0) console.log('Collect at least 8 coins and get key to enter the door');
 };
 
 PlayState._spawnCoin = function(coin) {

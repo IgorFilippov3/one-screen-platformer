@@ -8,6 +8,7 @@ function Grue(game, x, y) {
   this.animations.add('right', [0], 8, true);
   this.animations.add('left', [2], 8, true);
   this.animations.play('right');
+  this.healthPoint = 1;
 }
 
 Grue.SPEED = 200;
@@ -25,3 +26,13 @@ Grue.prototype.update = function() {
     this.animations.play('right');
   }
 }
+
+Grue.prototype.die = function() {
+  if(this.healthPoint === 0) {
+      this.kill();
+      this.body.enable = false;
+  } else {
+    this.healthPoint -= 1;
+    console.log(this.healthPoint);
+  }
+};
